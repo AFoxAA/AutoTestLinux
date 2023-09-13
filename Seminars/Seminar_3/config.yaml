@@ -1,0 +1,8 @@
+test: /home/anton/GB/task1/test
+out: /home/anton/GB/task1/out
+folder_e: /home/anton/GB/task1/folder_e
+folder_x: /home/anton/GB/task1/folder_x
+folder_broken: /home/anton/GB/task1/folder_broken
+
+count: 5
+bs: 1K
