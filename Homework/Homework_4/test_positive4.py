@@ -9,7 +9,25 @@ with open('config.yaml') as f:
 
 
 class TestPositive:
-    def test_step1(self, make_folders, make_files, start_time) -> None:
+    def test_step1(self, start_time) -> None:
+        '''Установка пакета на удаленной машине'''
+        save_log(data['ip'], data['user'], data['passwd'], start_time, data["stat_file"])
+        result: list[bool] = []
+
+        upload_files(data["ip"], data["user"], data["passwd"], f'{data["pkgname"]}.{data["file_extension"]}',
+                     f'{data["test"]}{data["pkgname"]}.{data["file_extension"]}')
+
+        result.append(ssh_checkout(data["ip"], data["user"], data["passwd"],
+                                   f'echo {data["passwd"]} | sudo -S dpkg -i {data["test"]}{data["pkgname"]}.{data["file_extension"]}',
+                                   "Настраивается пакет", True))
+
+        result.append(ssh_checkout(data["ip"], data["user"], data["passwd"],
+                                   f'echo {data["passwd"]} | sudo -S dpkg -s {data["pkgname"]}',
+                                   "Status: install ok installed", True))
+
+        assert all(result), "test1 FAIL"
+
+    def test_step2(self, make_folders, make_files, start_time) -> None:
         '''Добавление фалов в архив'''
         save_log(data['ip'], data['user'], data['passwd'], start_time, data["stat_file"])
         result: list[bool] = []
@@ -20,9 +38,9 @@ class TestPositive:
         result.append(ssh_checkout(data['ip'], data['user'], data['passwd'],
                                    f'ls {data["out"]}', f'arx2.{data["archive_type"]}', True))
 
-        assert all(result), 'test1 FAIL'
+        assert all(result), 'test2 FAIL'
 
-    def test_step2(self, make_folders, make_files, start_time) -> None:
+    def test_step3(self, make_folders, make_files, start_time) -> None:
         '''Проверка содержимого архива'''
         save_log(data['ip'], data['user'], data['passwd'], start_time, data["stat_file"])
         result: list[bool] = []
@@ -33,9 +51,9 @@ class TestPositive:
         result.append(ssh_checkout(data['ip'], data['user'], data['passwd'],
                                    f'cd {data["out"]}; 7z l arx2.{data["archive_type"]}', '5 files', True))
 
-        assert all(result), 'test2 FAIL'
+        assert all(result), 'test3 FAIL'
 
-    def test_step3(self, make_folders, make_files, start_time) -> None:
+    def test_step4(self, make_folders, make_files, start_time) -> None:
         '''Распаковка архива с опцией e (извлечение файлов без сохранения структуры каталогов из архива)'''
         save_log(data['ip'], data['user'], data['passwd'], start_time, data["stat_file"])
         result: list[bool] = []
@@ -49,9 +67,9 @@ class TestPositive:
 
         for item in make_files:
             result.append(ssh_checkout(data['ip'], data['user'], data['passwd'], f'ls {data["folder_e"]}', item))
-        assert all(result), 'test3 FAIL'
+        assert all(result), 'test4 FAIL'
 
-    def test_step4(self, make_folders, make_files, make_subfolder, start_time) -> None:
+    def test_step5(self, make_folders, make_files, make_subfolder, start_time) -> None:
         '''Распаковка архива с опцией x (извлечение файлов с сохранением структуры каталогов из архива)'''
         save_log(data['ip'], data['user'], data['passwd'], start_time, data["stat_file"])
         result: list[bool] = []
@@ -70,9 +88,9 @@ class TestPositive:
                                    f'ls {data["folder_x"]}', make_subfolder[0], True))
         result.append(ssh_checkout(data['ip'], data['user'], data['passwd'],
                                    f'ls {data["folder_x"]}/{make_subfolder[0]}', make_subfolder[1], True))
-        assert all(result), "test4 FAIL"
+        assert all(result), "test5 FAIL"
 
-    def test_step5(self, make_folders, make_files, start_time) -> None:
+    def test_step6(self, make_folders, make_files, start_time) -> None:
         '''Проверка целостности архива'''
         save_log(data['ip'], data['user'], data['passwd'], start_time, data["stat_file"])
         result: list[bool] = []
@@ -83,9 +101,9 @@ class TestPositive:
         result.append(ssh_checkout(data['ip'], data['user'], data['passwd'],
                                    f'cd {data["out"]}; 7z t arx2.{data["archive_type"]}', 'Everything is Ok', True))
 
-        assert all(result), 'test5 FAIL'
+        assert all(result), 'test6 FAIL'
 
-    def test_step6(self, make_folders, make_files, start_time) -> None:
+    def test_step7(self, make_folders, make_files, start_time) -> None:
         '''Обновление содержимого архива'''
         save_log(data['ip'], data['user'], data['passwd'], start_time, data["stat_file"])
         result: list[bool] = []
@@ -97,9 +115,9 @@ class TestPositive:
                                    f'cd {data["test"]}; 7z u {data["out"]}/arx2.{data["archive_type"]}',
                                    'Everything is Ok', True))
 
-        assert all(result), 'test6 FAIL'
+        assert all(result), 'test7 FAIL'
 
-    def test_step7(self, make_folders, make_files, start_time) -> None:
+    def test_step8(self, make_folders, make_files, start_time) -> None:
         '''Проверить, что хеш архива совпадает с рассчитанным (команда crc32)'''
         save_log(data['ip'], data['user'], data['passwd'], start_time, data["stat_file"])
         result: list[bool] = []
@@ -113,9 +131,9 @@ class TestPositive:
                                                                   f'{data["out"]}/arx2.{data["archive_type"]}')
         result.append(calculated_crc32_hash == expected_crc32_hash)
 
-        assert all(result), f'test7 FAIL'
+        assert all(result), f'test8 FAIL'
 
-    def test_step8(self, make_folders, make_files, start_time):
+    def test_step9(self, make_folders, make_files, start_time):
         '''Проверить, что хеш файла совпадает с рассчитанным (команда crc32)'''
         save_log(data['ip'], data['user'], data['passwd'], start_time, data["stat_file"])
         result: list[bool] = []
@@ -130,24 +148,6 @@ class TestPositive:
             hash: str = getout(data['ip'], data['user'], data['passwd'], f'cd {data["test"]}; crc32 {item}').upper()
             result.append(ssh_checkout(data['ip'], data['user'], data['passwd'],
                                        f'cd {data["test"]}; 7z h {item}', hash, True))
-
-        assert all(result), "test8 FAIL"
-
-    def test_step9(self, start_time) -> None:
-        '''Установка пакета на удаленной машине'''
-        save_log(data['ip'], data['user'], data['passwd'], start_time, data["stat_file"])
-        result: list[bool] = []
-
-        upload_files(data["ip"], data["user"], data["passwd"], f'{data["pkgname"]}.{data["file_extension"]}',
-                     f'{data["test"]}{data["pkgname"]}.{data["file_extension"]}')
-
-        result.append(ssh_checkout(data["ip"], data["user"], data["passwd"],
-                                f'echo {data["passwd"]} | sudo -S dpkg -i {data["test"]}{data["pkgname"]}.{data["file_extension"]}',
-                                "Настраивается пакет", True))
-
-        result.append(ssh_checkout(data["ip"], data["user"], data["passwd"],
-                                f'echo {data["passwd"]} | sudo -S dpkg -s {data["pkgname"]}',
-                                "Status: install ok installed", True))
 
         assert all(result), "test9 FAIL"
 
@@ -166,6 +166,25 @@ class TestPositive:
         remove_test_data(data['ip'], data['user'], data['passwd'], test_data)
 
         assert all(result), 'test10 FAIL'
+
+    def test_step11(self, start_time) -> None:
+        '''Удаление пакета с удаленной машины'''
+        save_log(data['ip'], data['user'], data['passwd'], start_time, data["stat_file"])
+        result: list[bool] = []
+
+        result.append(ssh_checkout(data["ip"], data["user"], data["passwd"],
+                                   f'echo {data["passwd"]} | sudo -S dpkg -i {data["test"]}{data["pkgname"]}.{data["file_extension"]}',
+                                   "Настраивается пакет", True))
+
+        result.append(ssh_checkout(data["ip"], data["user"], data["passwd"],
+                                   f'echo {data["passwd"]} | sudo -S dpkg -r {data["pkgname"]}',
+                                   "Удаляется p7zip-full", True))
+
+        result.append(ssh_checkout(data["ip"], data["user"], data["passwd"],
+                                   f'echo {data["passwd"]} | sudo -S dpkg -s {data["pkgname"]}',
+                                   "Status: deinstall ok config-files", True))
+
+        assert all(result), "test11 FAIL"
 
 
 if __name__ == '__main__':
